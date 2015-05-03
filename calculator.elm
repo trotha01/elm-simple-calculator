@@ -31,6 +31,7 @@ type Operation
 type Command
     = Digit String
     | Op Operation
+    | Equals
     | Clear
 
 type alias Number = { negative : Bool, string : String }
@@ -93,7 +94,10 @@ calculator  state =
       , container 60 60 middle (Input.button (Signal.message commands.address (Digit "8")) "8")
       , container 60 60 middle (Input.button (Signal.message commands.address (Digit "9")) "9")
       ]
-  , container 180 60 middle (Input.button (Signal.message commands.address Clear) "clear")
+  , flow right
+      [ container 120 60 middle (Input.button (Signal.message commands.address Equals) "=")
+      , container 60 60 middle (Input.button (Signal.message commands.address Clear) "clear")
+      ]
   ]
 
 displayState : State -> String
@@ -122,22 +126,24 @@ update command state =
           operator (Add) state
       Op Subtract ->
           operator (Subtract) state
+      Equals ->
+          Start (equals state)
       Clear ->
           clear state
-    
+
 -- Used to modify the current number in the calculator (usually to append more digits)
 modifyNumber : (Number -> Number) -> State -> State
 modifyNumber f state =
     case state of
       Start n -> Start (f n)
       Operator n op m -> Operator n op (f m)
-      
+
 appendIf : (Number -> Bool) -> String -> Number -> Number
 appendIf isOkay str number =
     if isOkay number
     then { number | string <- number.string ++ str }
     else number
-    
+
 -- takes in an operation and goes to the next state
 operator : Operation -> State -> State
 operator op state =
@@ -147,17 +153,17 @@ operator op state =
       -- If we are in an operate state, then stay in an operate state
       Operator n _ m ->
           Operator (if m == zero then n else equals state) op zero
-          
+
 clear : State -> State
 clear state =
     case state of
       Start n -> Start zero
       Operator n op m ->
           if m == zero then Start zero else Operator n op zero
-          
+
 
 -- The actual calculation is done here
-equals : State -> Number 
+equals : State -> Number
 equals state =
     case state of
       Start n -> n

@@ -2027,7 +2027,7 @@ Elm.Main.make = function (_elm) {
          {case "Add": return "+";
             case "Subtract": return "-";}
          _U.badCase($moduleName,
-         "between lines 108 and 110");
+         "between lines 112 and 114");
       }();
    };
    var numberToFloat = function (number) {
@@ -2039,7 +2039,7 @@ Elm.Main.make = function (_elm) {
             {case "Err": return 0;
                case "Ok": return _v1._0 * neg;}
             _U.badCase($moduleName,
-            "between lines 57 and 59");
+            "between lines 58 and 60");
          }();
       }();
    };
@@ -2055,7 +2055,7 @@ Elm.Main.make = function (_elm) {
             case "Start":
             return $Basics.toString(numberToFloat(state._0));}
          _U.badCase($moduleName,
-         "between lines 101 and 104");
+         "between lines 105 and 108");
       }();
    };
    var floatToNumber = function ($float) {
@@ -2090,7 +2090,7 @@ Elm.Main.make = function (_elm) {
             case "Start":
             return Start(f(state._0));}
          _U.badCase($moduleName,
-         "between lines 131 and 134");
+         "between lines 137 and 139");
       }();
    });
    var zero = {_: {}
@@ -2108,7 +2108,7 @@ Elm.Main.make = function (_elm) {
             case "Start":
             return Start(zero);}
          _U.badCase($moduleName,
-         "between lines 153 and 157");
+         "between lines 159 and 162");
       }();
    };
    var equals = function (state) {
@@ -2124,11 +2124,11 @@ Elm.Main.make = function (_elm) {
                     return floatToNumber(numberToFloat(state._0) - (_U.eq(state._2,
                       zero) ? numberToFloat(state._0) : numberToFloat(state._2)));}
                  _U.badCase($moduleName,
-                 "between lines 164 and 170");
+                 "between lines 170 and 176");
               }();
             case "Start": return state._0;}
          _U.badCase($moduleName,
-         "between lines 162 and 170");
+         "between lines 168 and 176");
       }();
    };
    var operator = F2(function (op,
@@ -2147,7 +2147,7 @@ Elm.Main.make = function (_elm) {
               op,
               zero);}
          _U.badCase($moduleName,
-         "between lines 144 and 150");
+         "between lines 150 and 155");
       }();
    });
    var Number = F2(function (a,b) {
@@ -2156,6 +2156,7 @@ Elm.Main.make = function (_elm) {
              ,string: b};
    });
    var Clear = {ctor: "Clear"};
+   var Equals = {ctor: "Equals"};
    var Op = function (a) {
       return {ctor: "Op",_0: a};
    };
@@ -2182,6 +2183,8 @@ Elm.Main.make = function (_elm) {
                  A2(appendIf,isShort,command._0),
                  state);
               }();
+            case "Equals":
+            return Start(equals(state));
             case "Op":
             switch (command._0.ctor)
               {case "Add": return A2(operator,
@@ -2193,7 +2196,7 @@ Elm.Main.make = function (_elm) {
                    state);}
               break;}
          _U.badCase($moduleName,
-         "between lines 115 and 127");
+         "between lines 119 and 132");
       }();
    });
    var commands = $Signal.mailbox(Clear);
@@ -2321,15 +2324,26 @@ Elm.Main.make = function (_elm) {
                                 commands.address,
                                 Digit("9")),
                                 "9"))]))
-                   ,A4($Graphics$Element.container,
-                   180,
-                   60,
-                   $Graphics$Element.middle,
-                   A2($Graphics$Input.button,
-                   A2($Signal.message,
-                   commands.address,
-                   Clear),
-                   "clear"))]));
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                120,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Equals),
+                                "="))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Clear),
+                                "clear"))]))]));
    };
    var view = F2(function (_v33,
    state) {
@@ -2353,7 +2367,7 @@ Elm.Main.make = function (_elm) {
                            $Graphics$Element.middle,
                            calculator(state))])));}
          _U.badCase($moduleName,
-         "between lines 65 and 67");
+         "between lines 66 and 68");
       }();
    });
    var main = A2($Signal.map2,
@@ -2368,6 +2382,7 @@ Elm.Main.make = function (_elm) {
                       ,Subtract: Subtract
                       ,Digit: Digit
                       ,Op: Op
+                      ,Equals: Equals
                       ,Clear: Clear
                       ,Number: Number
                       ,zero: zero
