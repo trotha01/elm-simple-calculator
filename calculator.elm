@@ -103,7 +103,9 @@ calculator  state =
 displayState : State -> String
 displayState state =
     case state of
-      Start n -> toString (numberToFloat n)
+      Start n -> let digits = toString (numberToFloat n)
+                     neg = if n.negative then "-" else ""
+                 in neg ++ digits
       Operator n op m ->
         n.string ++ (stringFromOp op) ++ m.string
 

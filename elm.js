@@ -2027,7 +2027,7 @@ Elm.Main.make = function (_elm) {
          {case "Add": return "+";
             case "Subtract": return "-";}
          _U.badCase($moduleName,
-         "between lines 112 and 114");
+         "between lines 114 and 116");
       }();
    };
    var numberToFloat = function (number) {
@@ -2053,9 +2053,15 @@ Elm.Main.make = function (_elm) {
               stringFromOp(state._1),
               state._2.string));
             case "Start":
-            return $Basics.toString(numberToFloat(state._0));}
+            return function () {
+                 var neg = state._0.negative ? "-" : "";
+                 var digits = $Basics.toString(numberToFloat(state._0));
+                 return A2($Basics._op["++"],
+                 neg,
+                 digits);
+              }();}
          _U.badCase($moduleName,
-         "between lines 105 and 108");
+         "between lines 105 and 110");
       }();
    };
    var floatToNumber = function ($float) {
@@ -2090,7 +2096,7 @@ Elm.Main.make = function (_elm) {
             case "Start":
             return Start(f(state._0));}
          _U.badCase($moduleName,
-         "between lines 137 and 139");
+         "between lines 139 and 141");
       }();
    });
    var zero = {_: {}
@@ -2108,7 +2114,7 @@ Elm.Main.make = function (_elm) {
             case "Start":
             return Start(zero);}
          _U.badCase($moduleName,
-         "between lines 159 and 162");
+         "between lines 161 and 164");
       }();
    };
    var equals = function (state) {
@@ -2124,11 +2130,11 @@ Elm.Main.make = function (_elm) {
                     return floatToNumber(numberToFloat(state._0) - (_U.eq(state._2,
                       zero) ? numberToFloat(state._0) : numberToFloat(state._2)));}
                  _U.badCase($moduleName,
-                 "between lines 170 and 176");
+                 "between lines 172 and 178");
               }();
             case "Start": return state._0;}
          _U.badCase($moduleName,
-         "between lines 168 and 176");
+         "between lines 170 and 178");
       }();
    };
    var operator = F2(function (op,
@@ -2147,7 +2153,7 @@ Elm.Main.make = function (_elm) {
               op,
               zero);}
          _U.badCase($moduleName,
-         "between lines 150 and 155");
+         "between lines 152 and 157");
       }();
    });
    var Number = F2(function (a,b) {
@@ -2196,7 +2202,7 @@ Elm.Main.make = function (_elm) {
                    state);}
               break;}
          _U.badCase($moduleName,
-         "between lines 119 and 132");
+         "between lines 121 and 134");
       }();
    });
    var commands = $Signal.mailbox(Clear);
