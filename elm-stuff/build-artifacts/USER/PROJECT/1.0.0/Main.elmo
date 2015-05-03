@@ -1,0 +1,394 @@
+Elm.Main = Elm.Main || {};
+Elm.Main.make = function (_elm) {
+   "use strict";
+   _elm.Main = _elm.Main || {};
+   if (_elm.Main.values)
+   return _elm.Main.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Main",
+   $Basics = Elm.Basics.make(_elm),
+   $Char = Elm.Char.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Graphics$Input = Elm.Graphics.Input.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm),
+   $Window = Elm.Window.make(_elm);
+   var appendIf = F3(function (isOkay,
+   str,
+   number) {
+      return isOkay(number) ? _U.replace([["string"
+                                          ,A2($Basics._op["++"],
+                                          number.string,
+                                          str)]],
+      number) : number;
+   });
+   var stringFromOp = function (op) {
+      return function () {
+         switch (op.ctor)
+         {case "Add": return "+";
+            case "Subtract": return "-";}
+         _U.badCase($moduleName,
+         "between lines 107 and 109");
+      }();
+   };
+   var numberToFloat = function (number) {
+      return function () {
+         var neg = number.negative ? -1 : 1;
+         return function () {
+            var _v1 = $String.toFloat(number.string);
+            switch (_v1.ctor)
+            {case "Err": return 0;
+               case "Ok": return _v1._0 * neg;}
+            _U.badCase($moduleName,
+            "between lines 56 and 58");
+         }();
+      }();
+   };
+   var displayState = function (state) {
+      return function () {
+         switch (state.ctor)
+         {case "Operator":
+            return A2($Basics._op["++"],
+              state._0.string,
+              A2($Basics._op["++"],
+              stringFromOp(state._1),
+              state._2.string));
+            case "Start":
+            return $Basics.toString(numberToFloat(state._0));}
+         _U.badCase($moduleName,
+         "between lines 100 and 103");
+      }();
+   };
+   var floatToNumber = function ($float) {
+      return function () {
+         var neg = _U.cmp($float,
+         0) < 0 ? true : false;
+         return {_: {}
+                ,negative: neg
+                ,string: $Basics.toString($float)};
+      }();
+   };
+   var Operator = F3(function (a,
+   b,
+   c) {
+      return {ctor: "Operator"
+             ,_0: a
+             ,_1: b
+             ,_2: c};
+   });
+   var Start = function (a) {
+      return {ctor: "Start",_0: a};
+   };
+   var modifyNumber = F2(function (f,
+   state) {
+      return function () {
+         switch (state.ctor)
+         {case "Operator":
+            return A3(Operator,
+              state._0,
+              state._1,
+              f(state._2));
+            case "Start":
+            return Start(f(state._0));}
+         _U.badCase($moduleName,
+         "between lines 130 and 133");
+      }();
+   });
+   var zero = {_: {}
+              ,negative: false
+              ,string: ""};
+   var clear = function (state) {
+      return function () {
+         switch (state.ctor)
+         {case "Operator":
+            return _U.eq(state._2,
+              zero) ? Start(zero) : A3(Operator,
+              state._0,
+              state._1,
+              zero);
+            case "Start":
+            return Start(zero);}
+         _U.badCase($moduleName,
+         "between lines 152 and 156");
+      }();
+   };
+   var equals = function (state) {
+      return function () {
+         switch (state.ctor)
+         {case "Operator":
+            return function () {
+                 switch (state._1.ctor)
+                 {case "Add":
+                    return floatToNumber(numberToFloat(state._0) + (_U.eq(state._2,
+                      zero) ? numberToFloat(state._0) : numberToFloat(state._2)));
+                    case "Subtract":
+                    return floatToNumber(numberToFloat(state._0) - (_U.eq(state._2,
+                      zero) ? numberToFloat(state._0) : numberToFloat(state._2)));}
+                 _U.badCase($moduleName,
+                 "between lines 163 and 169");
+              }();
+            case "Start": return state._0;}
+         _U.badCase($moduleName,
+         "between lines 161 and 169");
+      }();
+   };
+   var operator = F2(function (op,
+   state) {
+      return function () {
+         switch (state.ctor)
+         {case "Operator":
+            return A3(Operator,
+              _U.eq(state._2,
+              zero) ? state._0 : equals(state),
+              op,
+              zero);
+            case "Start":
+            return A3(Operator,
+              state._0,
+              op,
+              zero);}
+         _U.badCase($moduleName,
+         "between lines 143 and 149");
+      }();
+   });
+   var Number = F2(function (a,b) {
+      return {_: {}
+             ,negative: a
+             ,string: b};
+   });
+   var Clear = {ctor: "Clear"};
+   var Op = function (a) {
+      return {ctor: "Op",_0: a};
+   };
+   var Digit = function (a) {
+      return {ctor: "Digit",_0: a};
+   };
+   var Subtract = {ctor: "Subtract"};
+   var Add = {ctor: "Add"};
+   var update = F2(function (command,
+   state) {
+      return function () {
+         switch (command.ctor)
+         {case "Clear":
+            return clear(state);
+            case "Digit":
+            return function () {
+                 var isShort = function (n) {
+                    return _U.cmp($String.length(A2($String.filter,
+                    $Char.isDigit,
+                    n.string)),
+                    10) < 0;
+                 };
+                 return A2(modifyNumber,
+                 A2(appendIf,isShort,command._0),
+                 state);
+              }();
+            case "Op":
+            switch (command._0.ctor)
+              {case "Add": return A2(operator,
+                   Add,
+                   state);
+                 case "Subtract":
+                 return A2(operator,
+                   Subtract,
+                   state);}
+              break;}
+         _U.badCase($moduleName,
+         "between lines 114 and 126");
+      }();
+   });
+   var commands = $Signal.mailbox(Clear);
+   var calculator = function (state) {
+      return A2($Graphics$Element.flow,
+      $Graphics$Element.down,
+      _L.fromArray([A4($Graphics$Element.container,
+                   180,
+                   60,
+                   $Graphics$Element.middle,
+                   $Graphics$Element.show(displayState(state)))
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("0")),
+                                "0"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Op(Add)),
+                                "+"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Op(Subtract)),
+                                "-"))]))
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("1")),
+                                "1"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("2")),
+                                "2"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("3")),
+                                "3"))]))
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("4")),
+                                "4"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("5")),
+                                "5"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("6")),
+                                "6"))]))
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("7")),
+                                "7"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("8")),
+                                "8"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("9")),
+                                "9"))]))
+                   ,A4($Graphics$Element.container,
+                   180,
+                   60,
+                   $Graphics$Element.middle,
+                   A2($Graphics$Input.button,
+                   A2($Signal.message,
+                   commands.address,
+                   Clear),
+                   "clear"))]));
+   };
+   var view = F2(function (_v33,
+   state) {
+      return function () {
+         switch (_v33.ctor)
+         {case "_Tuple2":
+            return A4($Graphics$Element.container,
+              _v33._0,
+              _v33._1,
+              $Graphics$Element.middle,
+              A2($Graphics$Element.flow,
+              $Graphics$Element.down,
+              _L.fromArray([A4($Graphics$Element.container,
+                           _v33._0,
+                           60,
+                           $Graphics$Element.middle,
+                           $Graphics$Element.show("This is a simple calculator made with Elm-lang"))
+                           ,A4($Graphics$Element.container,
+                           _v33._0,
+                           6 * 60,
+                           $Graphics$Element.middle,
+                           calculator(state))])));}
+         _U.badCase($moduleName,
+         "between lines 64 and 66");
+      }();
+   });
+   var main = A2($Signal.map2,
+   view,
+   $Window.dimensions)(A2($Signal.foldp,
+   update,
+   Start(zero))(commands.signal));
+   _elm.Main.values = {_op: _op
+                      ,main: main
+                      ,commands: commands
+                      ,Add: Add
+                      ,Subtract: Subtract
+                      ,Digit: Digit
+                      ,Op: Op
+                      ,Clear: Clear
+                      ,Number: Number
+                      ,zero: zero
+                      ,Start: Start
+                      ,Operator: Operator
+                      ,floatToNumber: floatToNumber
+                      ,numberToFloat: numberToFloat
+                      ,view: view
+                      ,calculator: calculator
+                      ,displayState: displayState
+                      ,stringFromOp: stringFromOp
+                      ,update: update
+                      ,modifyNumber: modifyNumber
+                      ,appendIf: appendIf
+                      ,operator: operator
+                      ,clear: clear
+                      ,equals: equals};
+   return _elm.Main.values;
+};
