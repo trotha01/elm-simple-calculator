@@ -15,5 +15,8 @@ or use elm-reactor
 elm-reactor
 ```
 
+## Sample
+See it at http://trotha01.github.io/elm-simple-calculator/
+
 ## Dependencies
 [elm](http://elm-lang.org/)
