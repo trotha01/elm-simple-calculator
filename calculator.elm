@@ -1,5 +1,6 @@
 import Signal exposing (Signal, Address)
-import Graphics.Element exposing (Element, show, flow, right, down, container, middle)
+import Graphics.Element exposing (Element, show, flow, right, down, container, middle, centered)
+import Text exposing (fromString)
 import Graphics.Input as Input
 import Window
 import String
@@ -62,7 +63,7 @@ numberToFloat number =
 view : (Int, Int) -> State -> Element
 view (w, h) state =
   container w h middle (flow down
-  [ container w 60 middle (show "This is a simple calculator made with Elm-lang")
+  [ container w 60 middle (centered (fromString "This is a simple calculator made with Elm-lang"))
   , container w (6*60) middle (calculator state)])
 
 
@@ -71,7 +72,7 @@ calculator : State -> Element
 calculator  state =
   flow down
   [
-  container 180 60 middle (show ((displayState state)))
+  container 180 60 middle (centered (fromString ((displayState state))))
   , flow right
       [ container 60 60 middle (Input.button (Signal.message commands.address (Digit "0")) "0")
       , container 60 60 middle (Input.button (Signal.message commands.address (Op Add)) "+")
