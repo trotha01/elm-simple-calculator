@@ -15,8 +15,13 @@ main =
 
 -- INPUTS
 
--- A mailbox to send commands to, and to get commands from (see possible commands in model below)
--- We initialize it with the "Clear" command
+-- We can send calculator commands to this mailbox using its address
+-- The calculator buttons below will send commands to this mailbox address
+-- The main function above "reads" from this mailbox and sends the values to "update" and "view"
+-- update will change the state
+-- view will display the state
+-- We initialize the mailbox with the "Clear" command
+-- See all the possible commands to send to this mailbox in the model section
 commands : Signal.Mailbox Command
 commands =
   Signal.mailbox Clear
