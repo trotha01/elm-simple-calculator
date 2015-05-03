@@ -2003,6 +2003,7 @@ Elm.Main.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm),
+   $Text = Elm.Text.make(_elm),
    $Window = Elm.Window.make(_elm);
    var appendIf = F3(function (isOkay,
    str,
@@ -2013,17 +2014,50 @@ Elm.Main.make = function (_elm) {
                                           str)]],
       number) : number;
    });
+   var stringFromOp = function (op) {
+      return function () {
+         switch (op.ctor)
+         {case "Add": return "+";
+            case "Subtract": return "-";}
+         _U.badCase($moduleName,
+         "between lines 108 and 110");
+      }();
+   };
    var numberToFloat = function (number) {
       return function () {
          var neg = number.negative ? -1 : 1;
          return function () {
-            var _v0 = $String.toFloat(number.string);
-            switch (_v0.ctor)
+            var _v1 = $String.toFloat(number.string);
+            switch (_v1.ctor)
             {case "Err": return 0;
-               case "Ok": return _v0._0 * neg;}
+               case "Ok": return _v1._0 * neg;}
             _U.badCase($moduleName,
-            "between lines 46 and 48");
+            "between lines 57 and 59");
          }();
+      }();
+   };
+   var displayState = function (state) {
+      return function () {
+         switch (state.ctor)
+         {case "Operator":
+            return A2($Basics._op["++"],
+              state._0.string,
+              A2($Basics._op["++"],
+              stringFromOp(state._1),
+              state._2.string));
+            case "Start":
+            return $Basics.toString(numberToFloat(state._0));}
+         _U.badCase($moduleName,
+         "between lines 101 and 104");
+      }();
+   };
+   var floatToNumber = function ($float) {
+      return function () {
+         var neg = _U.cmp($float,
+         0) < 0 ? true : false;
+         return {_: {}
+                ,negative: neg
+                ,string: $Basics.toString($float)};
       }();
    };
    var Operator = F3(function (a,
@@ -2049,24 +2083,12 @@ Elm.Main.make = function (_elm) {
             case "Start":
             return Start(f(state._0));}
          _U.badCase($moduleName,
-         "between lines 99 and 102");
+         "between lines 131 and 134");
       }();
    });
    var zero = {_: {}
               ,negative: false
               ,string: ""};
-   var displayNumber = function (state) {
-      return function () {
-         switch (state.ctor)
-         {case "Operator":
-            return _U.eq(state._2,
-              zero) ? state._0 : numberToFloat(state._2);
-            case "Start":
-            return numberToFloat(state._0);}
-         _U.badCase($moduleName,
-         "between lines 81 and 83");
-      }();
-   };
    var clear = function (state) {
       return function () {
          switch (state.ctor)
@@ -2079,21 +2101,27 @@ Elm.Main.make = function (_elm) {
             case "Start":
             return Start(zero);}
          _U.badCase($moduleName,
-         "between lines 121 and 125");
+         "between lines 153 and 157");
       }();
    };
    var equals = function (state) {
       return function () {
          switch (state.ctor)
          {case "Operator":
-            return A2(state._1,
-              state._0,
-              _U.eq(state._2,
-              zero) ? state._0 : numberToFloat(state._2));
-            case "Start":
-            return numberToFloat(state._0);}
+            return function () {
+                 switch (state._1.ctor)
+                 {case "Add":
+                    return floatToNumber(numberToFloat(state._0) + (_U.eq(state._2,
+                      zero) ? numberToFloat(state._0) : numberToFloat(state._2)));
+                    case "Subtract":
+                    return floatToNumber(numberToFloat(state._0) - (_U.eq(state._2,
+                      zero) ? numberToFloat(state._0) : numberToFloat(state._2)));}
+                 _U.badCase($moduleName,
+                 "between lines 164 and 170");
+              }();
+            case "Start": return state._0;}
          _U.badCase($moduleName,
-         "between lines 130 and 132");
+         "between lines 162 and 170");
       }();
    };
    var operator = F2(function (op,
@@ -2108,23 +2136,32 @@ Elm.Main.make = function (_elm) {
               zero);
             case "Start":
             return A3(Operator,
-              numberToFloat(state._0),
+              state._0,
               op,
               zero);}
          _U.badCase($moduleName,
-         "between lines 112 and 118");
+         "between lines 144 and 150");
       }();
    });
+   var Number = F2(function (a,b) {
+      return {_: {}
+             ,negative: a
+             ,string: b};
+   });
+   var Clear = {ctor: "Clear"};
+   var Op = function (a) {
+      return {ctor: "Op",_0: a};
+   };
+   var Digit = function (a) {
+      return {ctor: "Digit",_0: a};
+   };
+   var Subtract = {ctor: "Subtract"};
+   var Add = {ctor: "Add"};
    var update = F2(function (command,
    state) {
       return function () {
          switch (command.ctor)
-         {case "Add": return A2(operator,
-              F2(function (x,y) {
-                 return x + y;
-              }),
-              state);
-            case "Clear":
+         {case "Clear":
             return clear(state);
             case "Digit":
             return function () {
@@ -2138,188 +2175,203 @@ Elm.Main.make = function (_elm) {
                  A2(appendIf,isShort,command._0),
                  state);
               }();
-            case "Subtract":
-            return A2(operator,
-              F2(function (x,y) {
-                 return x - y;
-              }),
-              state);}
+            case "Op":
+            switch (command._0.ctor)
+              {case "Add": return A2(operator,
+                   Add,
+                   state);
+                 case "Subtract":
+                 return A2(operator,
+                   Subtract,
+                   state);}
+              break;}
          _U.badCase($moduleName,
-         "between lines 88 and 96");
+         "between lines 115 and 127");
       }();
    });
-   var Number = F2(function (a,b) {
-      return {_: {}
-             ,negative: a
-             ,string: b};
-   });
-   var Clear = {ctor: "Clear"};
-   var Subtract = {ctor: "Subtract"};
-   var Add = {ctor: "Add"};
-   var Digit = function (a) {
-      return {ctor: "Digit",_0: a};
-   };
    var commands = $Signal.mailbox(Clear);
-   var calculator = F2(function (_v30,
+   var calculator = function (state) {
+      return A2($Graphics$Element.flow,
+      $Graphics$Element.down,
+      _L.fromArray([A4($Graphics$Element.container,
+                   180,
+                   60,
+                   $Graphics$Element.middle,
+                   $Graphics$Element.centered($Text.fromString(displayState(state))))
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("0")),
+                                "0"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Op(Add)),
+                                "+"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Op(Subtract)),
+                                "-"))]))
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("1")),
+                                "1"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("2")),
+                                "2"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("3")),
+                                "3"))]))
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("4")),
+                                "4"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("5")),
+                                "5"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("6")),
+                                "6"))]))
+                   ,A2($Graphics$Element.flow,
+                   $Graphics$Element.right,
+                   _L.fromArray([A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("7")),
+                                "7"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("8")),
+                                "8"))
+                                ,A4($Graphics$Element.container,
+                                60,
+                                60,
+                                $Graphics$Element.middle,
+                                A2($Graphics$Input.button,
+                                A2($Signal.message,
+                                commands.address,
+                                Digit("9")),
+                                "9"))]))
+                   ,A4($Graphics$Element.container,
+                   180,
+                   60,
+                   $Graphics$Element.middle,
+                   A2($Graphics$Input.button,
+                   A2($Signal.message,
+                   commands.address,
+                   Clear),
+                   "clear"))]));
+   };
+   var view = F2(function (_v33,
    state) {
       return function () {
-         switch (_v30.ctor)
+         switch (_v33.ctor)
          {case "_Tuple2":
-            return A2($Graphics$Element.flow,
+            return A4($Graphics$Element.container,
+              _v33._0,
+              _v33._1,
+              $Graphics$Element.middle,
+              A2($Graphics$Element.flow,
               $Graphics$Element.down,
               _L.fromArray([A4($Graphics$Element.container,
-                           50,
-                           30,
+                           _v33._0,
+                           60,
                            $Graphics$Element.middle,
-                           $Graphics$Element.show($Basics.toString(displayNumber(state))))
-                           ,A2($Graphics$Element.flow,
-                           $Graphics$Element.right,
-                           _L.fromArray([A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("0")),
-                                        "0"))
-                                        ,A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Add),
-                                        "+"))
-                                        ,A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Subtract),
-                                        "-"))]))
-                           ,A2($Graphics$Element.flow,
-                           $Graphics$Element.right,
-                           _L.fromArray([A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("1")),
-                                        "1"))
-                                        ,A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("2")),
-                                        "2"))
-                                        ,A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("3")),
-                                        "3"))]))
-                           ,A2($Graphics$Element.flow,
-                           $Graphics$Element.right,
-                           _L.fromArray([A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("4")),
-                                        "4"))
-                                        ,A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("5")),
-                                        "5"))
-                                        ,A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("6")),
-                                        "6"))]))
-                           ,A2($Graphics$Element.flow,
-                           $Graphics$Element.right,
-                           _L.fromArray([A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("7")),
-                                        "7"))
-                                        ,A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("8")),
-                                        "8"))
-                                        ,A4($Graphics$Element.container,
-                                        30,
-                                        30,
-                                        $Graphics$Element.middle,
-                                        A2($Graphics$Input.button,
-                                        A2($Signal.message,
-                                        commands.address,
-                                        Digit("9")),
-                                        "9"))]))
+                           $Graphics$Element.centered($Text.fromString("This is a simple calculator made with Elm-lang")))
                            ,A4($Graphics$Element.container,
-                           90,
-                           30,
+                           _v33._0,
+                           6 * 60,
                            $Graphics$Element.middle,
-                           A2($Graphics$Input.button,
-                           A2($Signal.message,
-                           commands.address,
-                           Clear),
-                           "clear"))]));}
+                           calculator(state))])));}
          _U.badCase($moduleName,
-         "between lines 54 and 77");
+         "between lines 65 and 67");
       }();
    });
    var main = A2($Signal.map2,
-   calculator,
+   view,
    $Window.dimensions)(A2($Signal.foldp,
    update,
    Start(zero))(commands.signal));
    _elm.Main.values = {_op: _op
                       ,main: main
                       ,commands: commands
-                      ,Digit: Digit
                       ,Add: Add
                       ,Subtract: Subtract
+                      ,Digit: Digit
+                      ,Op: Op
                       ,Clear: Clear
                       ,Number: Number
                       ,zero: zero
                       ,Start: Start
                       ,Operator: Operator
+                      ,floatToNumber: floatToNumber
                       ,numberToFloat: numberToFloat
+                      ,view: view
                       ,calculator: calculator
-                      ,displayNumber: displayNumber
+                      ,displayState: displayState
+                      ,stringFromOp: stringFromOp
                       ,update: update
                       ,modifyNumber: modifyNumber
                       ,appendIf: appendIf
